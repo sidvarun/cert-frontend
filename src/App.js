@@ -1,24 +1,27 @@
-import logo from './logo.svg';
 import './App.css';
+import Home from './screens/Home';
+import Register from './components/RegisterForm';
+import LogIn from './components/LogIn';
+import Dashboard from './screens/Dashboard';
+import { useSelector } from 'react-redux';
+import { BrowserRouter as Router, Route, Routes, Navigate} from "react-router-dom";
+
+
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
+  
+  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route exact path="/" element={<Home/>} />
+        <Route exact path="/register" element={<Register/>} />
+        <Route exact path="/login" element={isAuthenticated ? <Navigate to="/dashboard"/> : <LogIn/>} />
+        <Route exact path="/dashboard" element = {isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+      </Routes>
+    </Router>
   );
 }
 
