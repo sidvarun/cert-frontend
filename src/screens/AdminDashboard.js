@@ -1,17 +1,19 @@
-import React, {useState, useEffect} from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { Button, Col, Container, Modal, Row, Alert, Form} from "react-bootstrap";
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+
+import CreateEventForm from "../components/CreateEventForm";
 import { logout } from '../actions/auth';
 import { fetchEvents } from '../actions/eventsActions';
 import Event from '../components/Event';
-import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 
-  const Dashboard = () => {
-    const dispatch = useDispatch();
+const AdminDashboard = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [isEventCreated, setIsEventCreated] = useState(false);
+  const [filter, setFilter] = useState('registered'); // default value
 
-    const handleLogout = () => {
-      dispatch(logout());
-  };
+  const dispatch = useDispatch();
   const token = useSelector(state => state.auth.user.token);
 
   useEffect(() => {
@@ -20,20 +22,30 @@ import { Form, Button, Container, Row, Col } from 'react-bootstrap';
   }, [dispatch, token]);
 
   const { loading, events, error } = useSelector((state) => state);
-  const Events = events.events;
-  console.log(events.events);
 
-  const [filter, setFilter] = useState('registered'); // default value
-
-  const [showUpcoming, setShowUpcoming] = useState(true);
-
-  const upcomingEvents = Events.filter((event) => new Date(event.startDate) > new Date());
-  const pastEvents = Events.filter((event) => new Date(event.startDate) <= new Date());
-
-  const handleToggle = () => {
-    setShowUpcoming(!showUpcoming);
+  const handleLogout = () => {
+    dispatch(logout());
   };
 
+  const handleCreateEventClick = () => {
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+
+    setTimeout(() => {
+        setIsEventCreated(false);
+    }, 1000);
+    
+  };
+
+  const handleEventCreated = () => {
+    setIsEventCreated(true);
+    dispatch(fetchEvents(token));
+
+  };
+  const Events = events.events;
 
   const filteredEvents = Events.filter((event) => {
     if (filter === 'registered') {
@@ -43,7 +55,8 @@ import { Form, Button, Container, Row, Col } from 'react-bootstrap';
     } 
     return new Date(event.startDate) < new Date();
   }).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-  
+
+
   if (loading) {
     return <div>Loading events...</div>;
   }
@@ -52,6 +65,7 @@ import { Form, Button, Container, Row, Col } from 'react-bootstrap';
     return <div>{error}</div>;
   }
 
+  
   return (
     <div>
       <nav className="navbar navbar-expand-lg" style={{ backgroundColor: "#1f4068",  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.8)"
@@ -87,7 +101,7 @@ import { Form, Button, Container, Row, Col } from 'react-bootstrap';
           </div>
         </div>
       </nav>
-      <Container >
+  <Container>
 
       <Row className="my-5">
         {/* <Col>
@@ -102,7 +116,43 @@ import { Form, Button, Container, Row, Col } from 'react-bootstrap';
         </Col>
       </Row>
 
-      <div className="container my-5">
+      <Row className="mt-3">
+        <Col md="auto">
+          <div className='button-container'>
+            <Button variant="primary"  className="event-card-button-two" onClick={handleCreateEventClick}>
+              Create Event
+            </Button>
+          </div>
+        </Col>
+      </Row>
+      <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Create Event</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <CreateEventForm onClose={handleCloseModal} onEventCreated={handleEventCreated}/>
+          {isEventCreated && (
+            <div className="alert alert-success mt-3" role="alert">
+              Event successfully created!
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Row className="mt-5">
+        <Col>
+            {isEventCreated && (
+            <Alert variant="success">
+                Event Created Successfully
+            </Alert>)}
+        </Col>
+      </Row>
+    <div className="container my-5">
         {/* <h2>Events</h2> */}
         <Row xs={1} md={2} lg={3} className="g-4">
           {filteredEvents.length > 0 ? (
@@ -117,8 +167,8 @@ import { Form, Button, Container, Row, Col } from 'react-bootstrap';
         </Row>
       </div>
     </Container>
-    </div>
+  </div>
   );
-};  
+};
 
-export default Dashboard;
+export default AdminDashboard;
